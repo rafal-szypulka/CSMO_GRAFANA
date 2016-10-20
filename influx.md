@@ -22,8 +22,9 @@ RedHat and CentOS users can install the latest stable version of InfluxDB using 
 
 ```bash
 wget https://dl.influxdata.com/influxdb/releases/influxdb-1.0.0.x86_64.rpm
-sudo yum localinstall influxdb-1.0.2.x86_64.rpm
+sudo yum localinstall influxdb-1.0.0.x86_64.rpm
 sudo systemctl start influxdb
+sudo systemctl status influxdb
 ```
 
 **Configure InfluxDB**
@@ -58,12 +59,13 @@ To interact with your installation of InfluxDB (i.e. create users, databases, et
 
 3\.  Type `influx` and hit enter
 
-    [root@centflux02 bin]# influx
-    Visit https://enterprise.influxdata.com to register for updates, InfluxDB server management, and monitoring.
-    Connected to http://localhost:8086 version 0.11.1
-    InfluxDB shell 0.11.1
-    >
+	[ibmcloud@rscase2 ~]$ influx
+	Visit https://enterprise.influxdata.com to register for updates, InfluxDB server management, and monitoring.
+	Connected to http://localhost:8086 version 1.0.0
+	InfluxDB shell version: 1.0.0
+	>
 
+<!---
 **Create InfluxDB User(s)**
 
 For this example, create a user called `esx` with a password of `esx`.  Type the following into your influx CLI session and press enter.
@@ -74,12 +76,12 @@ _Tip: Influx commands only return interactive messages on failure.  So after hit
 
 _For full details on Influx authentication:
 [https://docs.influxdata.com/influxdb/v0.11/administration/authentication_and_authorization/](https://docs.influxdata.com/influxdb/v0.11/administration/authentication_and_authorization/)_
-
+-->
+	
 **Create InfluxDB Database**
 
-For this example, create a database called `iops` and another called `compute`.
+Create a database called `service_status`.
 
-    CREATE DATABASE iops
-    CREATE DATABASE compute
+    CREATE DATABASE service_status
 
-_Note: We will use these databases in the next steps._
+_Note: We will use this database in the next steps._
