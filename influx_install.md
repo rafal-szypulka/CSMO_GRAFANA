@@ -1,7 +1,7 @@
 
 
 #InfluxDB
-[InfluxDB](https://www.influxdata.com/time-series-platform/influxdb/) is an open-source time series database developed by InfluxData as part of their time series platform. It is written in Go and optimized for fast, high-availability storage and retrieval of time series data in fields such as operations monitoring, application metrics, Internet of Things sensor data, and real-time analytics. Here InfluxDB is used and storage for metrics collected by perl runtime and primary data source for Grafana dashboard.
+[InfluxDB](https://www.influxdata.com/time-series-platform/influxdb/) is an open-source time series database developed by InfluxData as part of their time series platform. It is written in Go and optimized for fast, high-availability storage and retrieval of time series data in fields such as operations monitoring, application metrics, Internet of Things sensor data, and real-time analytics. Here InfluxDB is used as storage for metrics collected by perl runtime and primary data source for Grafana dashboard.
 
 ## Requirements
 
@@ -16,7 +16,7 @@ By default, InfluxDB uses the following network ports:
 
 In addition to the ports above, InfluxDB also offers multiple plugins that may
 require custom ports.
-All port mappings can be modified through the [configuration file](/influxdb/v1.0/administration/config),
+All port mappings can be modified through the [configuration file](docs.influxdata.com/influxdb/v1.0/administration/config),
 which is located at `/etc/influxdb/influxdb.conf` for default installations.
 
 ## Installation

@@ -28,15 +28,14 @@ You’ll then be presented with a welcome header and the MySQL prompt as shown b
 In the example below, `cmdb` is the name of the database, `cmdb` is the user, and `cmdb` is the user’s password.
 
 ```sql
- create database cmdb;
- create user 'cmdb'@'localhost' identified by 'cmdb';
- grant all on cmdb.* to 'cmdb' identified by 'cmdb';
+create database cmdb;
+create user 'cmdb'@'localhost' identified by 'cmdb';
+grant all on cmdb.* to 'cmdb' identified by 'cmdb';
 ```
 
-You can shorten this process by creating the user while assigning database permissions:
 
 ##Create CMDB database schema and import example
-Use provided sql script !!!link!!! to create table and import example data.
+Use provided sql [script](scripts/cmdb.sql) to create table and import example data.
 
 	mysql -u cmdb -p cmdb < cmdb.sql
 
