@@ -1,5 +1,5 @@
 # Introduction
-Grafana is one of the leading tools for querying and visualizing time series and metrics. In the CSMO project we used it to create dashboards for First Responder persona. 
+[Grafana](http://grafana.org) is one of the leading tools for querying and visualizing time series and metrics. In the CSMO project we used it to create dashboards for First Responder persona. 
 Grafana features a variety of panels, including fully featured graph panels with rich visualization options. There is built in support for many of the time series data sources like InfluxDB or Graphite. We used InfluxDB - a time series database for metrics as a data source for Grafana and perl script to collect data from various APIs of BlueCompute CSMO infrastructure like New Relic, Bluemix, NOI or CMDB.
 
 # Installing Grafana on Centos 7
@@ -57,12 +57,19 @@ upgrades.
 ## Configuration
 
 The configuration file is located at `/etc/grafana/grafana.ini`.  Go the
-[Configuration](http://docs.grafana.org//installation/configuration) page for details on all
+[Configuration](http://docs.grafana.org/installation/configuration) page for details on all
 those options.
 
 ### Adding data sources
 
 - [InfluxDB](../datasources/influxdb.md)
+
+# Installing MySQL on Centos 7
+MySQL is a popular database management system used for web and server applications. CSMO solution use MySQL as CMDB database storing configuration information for CSMO solution components. Use the steps below to install MySQL on Centos 7.
+
+`sudo yum update
+
+
 
 
 
