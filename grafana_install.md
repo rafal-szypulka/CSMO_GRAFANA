@@ -62,12 +62,8 @@ those options.
 
 ### Adding data sources
 
-- [InfluxDB](../datasources/influxdb.md)
+- [InfluxDB]
 
-# Installing MySQL on Centos 7
-MySQL is a popular database management system used for web and server applications. CSMO solution use MySQL as CMDB database storing configuration information for CSMO solution components. Use the steps below to install MySQL on Centos 7.
-
-`sudo yum update
 
 
 
