@@ -163,9 +163,55 @@ Expected output:
 
 **Schedule periodic API calls**
 
-API calls done by [`grafana_collect.pl`](scripts/grafana_collect.pl) are activated by external HTTP GET requests to perl runtime web server listening on port `3001` by default. One of the ways to schedule periodic API calls is to create short shell script that will do the HTTP GET requests and schedule it by cron.
+API calls done by [`grafana_collect.pl`](scripts/grafana_collect.pl) are activated by external HTTP GET requests to perl runtime web server, listening on port `3001` by default. One of the ways to schedule periodic API calls is to create short shell script that will do the HTTP GET requests and schedule it by cron.
 Below are the configuration steps:
 
 1. Copy the [grafana_collect_run.sh](scripts/grafana_collect_run.sh) to the server (_I copied it to my home drectory_) and make it executable.
-2. Configure cron to run it every 1 minute using `crontab -e` as non-root user.
+2. Configure `cron` to run it every 1 minute using `crontab -e` as non-root user.
 
+After 1 minute, first batch of data should be available in InfluxDB.
+Enter InfluxDB shell or web console http://localhost:8083 and verify that data was written to database:
+
+	[root@rscase rafal]# influx
+	Visit https://enterprise.influxdata.com to register for updates, InfluxDB server management, and monitoring.
+	Connected to http://localhost:8086 version 1.0.0
+	InfluxDB shell version: 1.0.0
+	> use service_status
+	Using database service_status
+	> show measurements
+	name: measurements
+	------------------
+	name
+	bmx_app_status
+	container_status
+	mysql_status
+	ngnix_status
+	noi_app_severity
+	service_status
+
+	> select * from bmx_app_status limit 3
+	name: bmx_app_status
+	--------------------
+	time			cf_name			instances	running_instances	status	status_num
+	1477134025269798000	bluecompute-web-app	1		1			STARTED	0
+	1477134025269876000	inventory-bff-app-dev	1		1			STARTED	0
+	1477134025269942000	socialreview-bff-app	1		1			STARTED	0
+
+	> select * from service_status limit 3
+	name: service_status
+	--------------------
+	time			apdex_score	apdex_target	apptype	client		error_rate	host_count	instance_count	language	name			regionname	response_time	servicename	status	throughput
+	1477134062218983000	0		0.1		cf_app	CASE-DEV	0		1		1		nodejs		inventory-bff-app-dev	bmx_eu-gb	0		BlueCompute	0	0
+	1477134062219085000	0.98		0.3		cf_app	CASE-DEV	0		1		1		nodejs		bluecompute-web-app	bmx_eu-gb	32.7		BlueCompute	0	7.67
+	1477134062219206000	0.75		0.1		cf_app	CASE-DEV	0		1		1		nodejs		socialreview-bff-app	bmx_eu-gb	73.4		BlueCompute	0	0.667
+
+	> select * from noi_app_severity limit 3
+	name: noi_app_severity
+	----------------------
+	time			app_name				highest_sev
+	1477134023670451000	micro-socialreview-cloudnative-qa	0
+	1477134023670493000	eureka-cluster-eu			5
+	1477134023670522000	Python Application			0
+
+	> exit
+	[root@rscase rafal]#
