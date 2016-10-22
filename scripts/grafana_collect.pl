@@ -91,96 +91,6 @@ sub send_to_influx {
     close F;
 }
 
-#sends request to New Relic API and prints JSON response
-my $ms = [
-    {
-        "target"     => "upper_75",
-        "datapoints" => [ [ 622, 99 ], ]
-    },
-
-    #  {
-    #    "target" => "upper_90",
-    #    "datapoints" => [
-    #      [861,1450754160000],
-    #	  ]
-    #  }
-];
-
-my $s = [
-    "instrumented-inventory-group12", "zuul_cluster",
-    "upper_75",                       "upper_90",
-    "upper_95"
-];
-
-any '/query' => sub {
-    my $c = shift;
-    my $size;
-    my $target = $c->req->json->{scopedVars}->{ContainerGroupName}->{value};
-    $c->inactivity_timeout(60);
-    $c->ua->post(
-        $bluemix_auth => { Authorization => 'Basic Y2Y6' } => form => {
-            grant_type => 'password',
-            username   => $bmx_username,
-            password   => $bmx_password
-          } => sub {
-            my ( $ua, $tx ) = @_;
-
-            my $bmx_access_token = $tx->res->json->{access_token};
-
-            #say "${bmx_container_group}/${target}";
-
-            $c->ua->get(
-                "${bmx_container_group}/${target}" => {
-                    'X-Auth-Token'      => "bearer $bmx_access_token",
-                    'X-Auth-Project-Id' => $bmx_space_guid
-                  } => sub {
-                    my ( $ua, $tx ) = @_;
-                    my ( $type, $group );
-
-                    #say Dumper( $tx->res->json );
-                    $size = $tx->res->json->{NumberInstances}->{CurrentSize};
-                    $c->render(
-                        json => [
-                            {
-                                "target"     => $target,
-                                "datapoints" => [ [ $size, 99 ] ]
-                            }
-                        ]
-                    );
-                }
-            );
-        }
-    );
-
-};
-
-any '/search' => sub {
-    my $c = shift;
-
-    $c->render( json => $s );
-};
-
-get '/json' => sub {
-    my $c = shift;
-    my $headers = { Accept => 'application/json' };
-
-    # $c->ua->get( $newrelic_url => { 'X-Api-Key' => $api_key } )->res->body;
-    my $app_json = $c->ua->post(
-        $noi_api => {
-            'Accept'       => 'application/json',
-            'Content-Type' => 'application/json',
-            charset        => 'UTF-8'
-          } => json => {
-            sqlcmd => $noi_sql
-          } => sub {
-            my ( $ua, $tx ) = @_;
-
-            #say Dumper $tx;
-        }
-    )->res->body;
-    $c->render( json => $app_json );
-};
-
 #sends request to New Relic API, parses JSON output, formats InfluxDB LineProtocol lines and writes to InfluxDB
 get '/nr_cmdb' => sub {
     my $c = shift;
@@ -772,6 +682,61 @@ get '/html' => sub {
         }
     );
 };
+
+## Routes (/query and /search) are created for Grafana Simple JSON data source. Not used at the moment by the current dashboard
+
+my $s = [
+    "instrumented-inventory-group12", "zuul_cluster",
+    "upper_75",                       "upper_90",
+    "upper_95"
+];
+
+any '/query' => sub {
+    my $c = shift;
+    my $size;
+    my $target = $c->req->json->{scopedVars}->{ContainerGroupName}->{value};
+    $c->inactivity_timeout(60);
+    $c->ua->post(
+        $bluemix_auth => { Authorization => 'Basic Y2Y6' } => form => {
+            grant_type => 'password',
+            username   => $bmx_username,
+            password   => $bmx_password
+          } => sub {
+            my ( $ua, $tx ) = @_;
+
+            my $bmx_access_token = $tx->res->json->{access_token};
+
+            $c->ua->get(
+                "${bmx_container_group}/${target}" => {
+                    'X-Auth-Token'      => "bearer $bmx_access_token",
+                    'X-Auth-Project-Id' => $bmx_space_guid
+                  } => sub {
+                    my ( $ua, $tx ) = @_;
+                    my ( $type, $group );
+
+                    #say Dumper( $tx->res->json );
+                    $size = $tx->res->json->{NumberInstances}->{CurrentSize};
+                    $c->render(
+                        json => [
+                            {
+                                "target"     => $target,
+                                "datapoints" => [ [ $size, 99 ] ]
+                            }
+                        ]
+                    );
+                }
+            );
+        }
+    );
+
+};
+
+any '/search' => sub {
+    my $c = shift;
+
+    $c->render( json => $s );
+};
+
 
 app->start;
 __DATA__
