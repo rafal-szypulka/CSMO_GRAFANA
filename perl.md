@@ -114,17 +114,18 @@ Stop the script using `CTRL-c`.
 **Configure perl script to start with the system**
 
 Centos 7 uses `systemd` to initialize operating system components that must be started after Linux kernel is booted. Configure `systemd` to start grafana_collect.pl as a daemon together with the Operating System.
-1\. Copy service definition [grafana_collect.service](scripts/grafana_collect.service) to /etc/systemd/system directory. Note that provided service definition assumes that perl script is located in `/case` directory. Edit `grafana_collect.service` if you want to change script location or listening port (it uses port 3001 by default).
 
-2\. Enable new service to start with the system.
+1. Copy service definition [grafana_collect.service](scripts/grafana_collect.service) to /etc/systemd/system directory. Note that provided service definition assumes that perl script is located in `/case` directory. Edit `grafana_collect.service` if you want to change script location or listening port (it uses port 3001 by default).
+
+2. Enable new service to start with the system.
 
 	systemctl enable grafana_collect
 
-3\. Start the `grafana_collect` service.
+3. Start the `grafana_collect` service.
 
 	systemctl start grafana_collect
 
-4\. Verify that script started correctly.
+4. Verify that the script started correctly.
 
 	systemctl status grafana_collect
 
@@ -149,7 +150,7 @@ Expected output:
 
 Expected output:
 
-	[root@rscase case]# curl localhost:3002/list
+	[root@rscase case]# curl localhost:3001/list
 	.------------------------------------------------------------------------------------------------------------------------------------------.
 	|                                                         New Relic Service Status                                                         |
 	+-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------+
@@ -161,8 +162,10 @@ Expected output:
 	'-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------'
 
 **Schedule periodic API calls**
+
 API calls done by [`grafana_collect.pl`](scripts/grafana_collect.pl) are activated by external HTTP GET requests to perl runtime web server listening on port `3001` by default. One of the ways to schedule periodic API calls is to create short shell script that will do the HTTP GET requests and schedule it by cron.
 Below are the configuration steps:
-1\. Copy the [grafana_collect_run.sh](scripts/grafana_collect_run.sh) to the server (_I copied it to my home drectory_) and make it executable.
-2\. Configure cron to run it every 1 minute using `crontab -e` as non-root user.
+
+1. Copy the [grafana_collect_run.sh](scripts/grafana_collect_run.sh) to the server (_I copied it to my home drectory_) and make it executable.
+2. Configure cron to run it every 1 minute using `crontab -e` as non-root user.
 
