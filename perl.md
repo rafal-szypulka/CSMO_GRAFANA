@@ -171,7 +171,7 @@ Below are the configuration steps:
 
 First batch of data should be available in InfluxDB after about 1 minute.
 Enter InfluxDB shell or web console http://localhost:8083 and verify that data was written to database:
-
+```
 [root@rscase rafal]# influx
 Visit https://enterprise.influxdata.com to register for updates, InfluxDB server management, and monitoring.
 Connected to http://localhost:8086 version 1.0.0
@@ -206,4 +206,4 @@ time				app_name							highest_sev
 1477134023670522000	Python Application					0
 
 > exit 
-
+```
