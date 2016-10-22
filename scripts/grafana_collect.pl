@@ -8,23 +8,23 @@ use Hijk;
 use HTML::Table;
 use DBI;
 
-
 ############### Edit section below ###############################################################
-my $api_key       = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'; # New relic API Key
+my $api_key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';    # New relic API Key
 my $bmx_space_guid =
-  'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';               # cf space cloudnative-dev --guid
+  'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';   # cf space cloudnative-dev --guid
 
-my $noi_user     = "xxxx";                                 # Omnibus user
-my $noi_password = "xxxxxxxxx";                            # Ominbus user password
+my $noi_user     = "xxxx";                     # Omnibus user
+my $noi_password = "xxxxxxxxx";                # Ominbus user password
 my $noi_api =
-  "http://${noi_user}:${noi_password}\@xxx.xxx.xxx.xxx:8080/objectserver/restapi/sql/factory/";
-                                                           # insert Netcool Omnibus IP address above
-my $bmx_username = 'xxxxxxxxxxxxxxxx';                     # Bluemix user id
-my $bmx_password = 'xxxxxxxx';                             # Bluemix user password
-my $influx_host  = 'localhost';                            # change is InfluxDB is installed remotely
-my $influx_port  = '8086';                                 # change is Inlfux DB port is non-default
-my $uid = "cmdb";                                          # MySQL user for CMDB database
-my $pwd = 'cmdb';                                          # MySQL user password
+"http://${noi_user}:${noi_password}\@xxx.xxx.xxx.xxx:8080/objectserver/restapi/sql/factory/";
+
+# insert Netcool Omnibus IP address above
+my $bmx_username = 'xxxxxxxxxxxxxxxx';         # Bluemix user id
+my $bmx_password = 'xxxxxxxx';                 # Bluemix user password
+my $influx_host = 'localhost';    # change is InfluxDB is installed remotely
+my $influx_port = '8086';         # change is Inlfux DB port is non-default
+my $uid         = "cmdb";         # MySQL user for CMDB database
+my $pwd         = 'cmdb';         # MySQL user password
 ####################################################################################################
 
 #my $dsn          = "DBI:DB2:BMXCMDB";
@@ -38,7 +38,8 @@ my $bmx_containers_api =
 
 my $bmx_container_group =
   'https://containers-api.eu-gb.bluemix.net/v3/containers/groups';
-    #  'f5e787de-e25e-4b1b-9248-37065421ccc9'
+
+#  'f5e787de-e25e-4b1b-9248-37065421ccc9'
 my $logmet_dash_search =
 'https://logmet.eu-gb.bluemix.net/elasticsearch/grafana-dash/dashboard/_search';
 
@@ -46,10 +47,12 @@ my $bmx_apps_api =
   "https://api.eu-gb.bluemix.net/v2/spaces/${bmx_space_guid}/summary";
 
 my $noi_sql =
+
 #'select Serial, Node, Service, to_char(LastOccurrence), Severity from alerts.status where Severity >= 5';
 'select Serial, Node, Service, to_char(LastOccurrence), Severity from alerts.status';
 
 my $cmdb_sql =
+
 #"select APPNAME,APPID,REGIONNAME,CLIENT,DESCRIPTION,SERVICENAME,SERVICEID from BMXCMDB_SERVICEMAP";
 "select APPNAME,APPTYPE,APPID,REGIONNAME,CLIENT,DESCRIPTION,SERVICENAME,SERVICEID from cmdb";
 
@@ -94,6 +97,7 @@ my $ms = [
         "target"     => "upper_75",
         "datapoints" => [ [ 622, 99 ], ]
     },
+
     #  {
     #    "target" => "upper_90",
     #    "datapoints" => [
@@ -122,6 +126,7 @@ any '/query' => sub {
             my ( $ua, $tx ) = @_;
 
             my $bmx_access_token = $tx->res->json->{access_token};
+
             #say "${bmx_container_group}/${target}";
 
             $c->ua->get(
@@ -169,6 +174,7 @@ get '/json' => sub {
             sqlcmd => $noi_sql
           } => sub {
             my ( $ua, $tx ) = @_;
+
             #say Dumper $tx;
         }
     )->res->body;
@@ -219,7 +225,7 @@ get '/nr_cmdb' => sub {
                         $status = 3 if $status eq 'gray';
                         my (
                             $description, $regionname, $servicename,
-                            $serviceid,   $client,  $apptype
+                            $serviceid,   $client,     $apptype
                         );
 
                         $description = $row->{DESCRIPTION};
@@ -227,7 +233,7 @@ get '/nr_cmdb' => sub {
                         $servicename = $row->{SERVICENAME};
                         $serviceid   = $row->{SERVICID};
                         $client      = $row->{CLIENT};
-						$apptype	 = $row->{APPTYPE};
+                        $apptype     = $row->{APPTYPE};
 
                         $line .= data2line(
                             'service_status',
@@ -247,7 +253,7 @@ get '/nr_cmdb' => sub {
                                 regionname  => $regionname,
                                 servicename => $servicename,
                                 client      => $client,
-								apptype		=> $apptype
+                                apptype     => $apptype
                             }
                         );
 
@@ -256,6 +262,7 @@ get '/nr_cmdb' => sub {
                 }
             }
             chomp $line;
+
             #say $line;
             send_to_influx($line);
         }
@@ -309,6 +316,7 @@ get '/nr_mysql_cmdb' => sub {
                 $line .= "\n";
             }
             chomp $line;
+
             #say $line;
             send_to_influx($line);
         }
@@ -329,15 +337,22 @@ get '/nr_nginx_cmdb' => sub {
 
             for my $row (@$data_ref) {
                 foreach my $i ( @{ $tx->res->json->{components} } ) {
-                    if ( ($row->{APPNAME} eq $i->{name}) and ($i->{name} eq 'nginx-lb') ) {
+                    if (    ( $row->{APPNAME} eq $i->{name} )
+                        and ( $i->{name} eq 'nginx-lb' ) )
+                    {
 
-                        my $total_request_rate = $i->{summary_metrics}[0]->{values}->{raw};
-                        $total_request_rate .= '.0' if ( $total_request_rate =~ /^\d+$/ );
-                        my $active_connections = $i->{summary_metrics}[1]->{values}->{raw};
-                        $active_connections .= '.0' if ( $active_connections =~ /^\d+$/ );
+                        my $total_request_rate =
+                          $i->{summary_metrics}[0]->{values}->{raw};
+                        $total_request_rate .= '.0'
+                          if ( $total_request_rate =~ /^\d+$/ );
+                        my $active_connections =
+                          $i->{summary_metrics}[1]->{values}->{raw};
+                        $active_connections .= '.0'
+                          if ( $active_connections =~ /^\d+$/ );
                         my $connection_drop_rate =
                           $i->{summary_metrics}[2]->{values}->{raw};
-                        $connection_drop_rate .= '.0' if ( $connection_drop_rate =~ /^\d+$/ );
+                        $connection_drop_rate .= '.0'
+                          if ( $connection_drop_rate =~ /^\d+$/ );
                         my $description = $row->{DESCRIPTION};
                         my $regionname  = $row->{REGIONNAME};
                         my $servicename = $row->{SERVICENAME};
@@ -347,8 +362,8 @@ get '/nr_nginx_cmdb' => sub {
                         $line .= data2line(
                             'ngnix_status',
                             {
-                                total_request_rate      => ${total_request_rate},
-                                active_connections      => ${active_connections},
+                                total_request_rate   => ${total_request_rate},
+                                active_connections   => ${active_connections},
                                 connection_drop_rate => ${connection_drop_rate},
                             },
                             {
@@ -363,6 +378,7 @@ get '/nr_nginx_cmdb' => sub {
                 $line .= "\n";
             }
             chomp $line;
+
             #say $line;
             send_to_influx($line);
         }
@@ -371,13 +387,13 @@ get '/nr_nginx_cmdb' => sub {
     $c->render( text => 'ok' );
 };
 
-
 get '/logmet_redirect' => sub {
     my $c            = shift;
     my $container    = $c->param('container') || '';
     my $dbh          = DBI->connect( $dsn, $uid, $pwd );
     my $sql          = "$logmet_sql where APPNAME = \'$container\'";
     my $dashboard_id = $dbh->selectrow_array( $sql, undef );
+
     #say $dashboard_id;
     unless ($dashboard_id) {
         $c->render( text =>
@@ -389,13 +405,12 @@ get '/logmet_redirect' => sub {
     );
 };
 
-
 get '/container_status' => sub {
     my $c = shift;
     my %inst_num;
-	my %group_status;
+    my %group_status;
     my $inst_num;
-	my $group_status;
+    my $group_status;
     my $line     = '';
     my $dbh      = DBI->connect( $dsn, $uid, $pwd );
     my $data_ref = $dbh->selectall_arrayref( $cmdb_sql, { Slice => {} } );
@@ -423,10 +438,10 @@ get '/container_status' => sub {
                             $type  = 'ic_group';
                             $group = $i->{Group}->{Name};
                             $inst_num{$group}++;
-							if($i->{Status} eq 'Running') {
-								$group_status{$group}++;
-							}
-							
+                            if ( $i->{Status} eq 'Running' ) {
+                                $group_status{$group}++;
+                            }
+
                         }
                         else {
                             $type  = 'ic_single';
@@ -435,7 +450,7 @@ get '/container_status' => sub {
 
                         my (
                             $description, $regionname, $servicename,
-                            $serviceid,   $client, $apptype
+                            $serviceid,   $client,     $apptype
                         );
 
                         for my $row (@$data_ref) {
@@ -445,52 +460,55 @@ get '/container_status' => sub {
                                 $servicename = $row->{SERVICENAME};
                                 $serviceid   = $row->{SERVICID};
                                 $client      = $row->{CLIENT};
-								$apptype	 = $row->{APPTYPE};
+                                $apptype     = $row->{APPTYPE};
                             }
                         }
-												
+
                         if ( $inst_num{$group} ) {
+
                             #$inst_num = $inst_num{$group} . '.0';
-							$inst_num = $inst_num{$group};
+                            $inst_num = $inst_num{$group};
                         }
                         else {
                             #$inst_num = '1.0';
-							$inst_num = 1;
+                            $inst_num = 1;
                         }
 
-						if($group_status{$group}) {
-							if($group_status{$group} == 0 ) {
-								$group_status = 0;
-							} elsif ($group_status{$group} < $inst_num){
-								$group_status = 1;
-							} else {
-								$group_status = 2;
-							}
-						}
-						
-                        if($apptype) {
-						$line .= data2line(
-                            'container_status',
-                            {
-                                status     => $i->{Status},
-                                started    => $i->{Started},
-                                memory     => $i->{Memory},
-                                inst_index => $inst_num,
-								group_status => $group_status
-
-                            },
-                            {
-                                ic_name     => $i->{Name},
-                                ic_group    => $group,
-                                type        => $type,
-                                regionname  => $regionname,
-                                servicename => $servicename,
-                                client      => $client,
-								apptype     => $apptype
-
+                        if ( $group_status{$group} ) {
+                            if ( $group_status{$group} == 0 ) {
+                                $group_status = 0;
                             }
-                        );
-					}
+                            elsif ( $group_status{$group} < $inst_num ) {
+                                $group_status = 1;
+                            }
+                            else {
+                                $group_status = 2;
+                            }
+                        }
+
+                        if ($apptype) {
+                            $line .= data2line(
+                                'container_status',
+                                {
+                                    status       => $i->{Status},
+                                    started      => $i->{Started},
+                                    memory       => $i->{Memory},
+                                    inst_index   => $inst_num,
+                                    group_status => $group_status
+
+                                },
+                                {
+                                    ic_name     => $i->{Name},
+                                    ic_group    => $group,
+                                    type        => $type,
+                                    regionname  => $regionname,
+                                    servicename => $servicename,
+                                    client      => $client,
+                                    apptype     => $apptype
+
+                                }
+                            );
+                        }
                         $line .= "\n";
                     }
                     chomp $line;
@@ -504,7 +522,6 @@ get '/container_status' => sub {
         }
     );
 };
-
 
 get '/bmx_app_status' => sub {
     my $c    = shift;
@@ -597,26 +614,32 @@ get '/noi_app_severity' => sub {
             for my $i ( keys %event_num ) {
                 if ( $event_num{$i}{crit} ) {
                     $highest_sev = 5;
+
                     #say "$i:5";
                 }
                 elsif ( $event_num{$i}{major} ) {
                     $highest_sev = 4;
+
                     #say "$i:4";
                 }
                 elsif ( $event_num{$i}{minor} ) {
                     $highest_sev = 3;
+
                     #say "$i:3";
                 }
                 elsif ( $event_num{$i}{warn} ) {
                     $highest_sev = 2;
+
                     #say "$i:2";
                 }
                 elsif ( $event_num{$i}{inter} ) {
                     $highest_sev = 1;
+
                     #say "$i:1";
                 }
                 else {
                     $highest_sev = 0;
+
                     #say "$i:0";
                 }
                 $line .= data2line(
@@ -631,6 +654,7 @@ get '/noi_app_severity' => sub {
                 $line .= "\n";
             }
             chomp $line;
+
             #say $line;
             send_to_influx($line);
         }
