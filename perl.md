@@ -20,15 +20,15 @@ Use the following steps to install prerequisite system packages and perl modules
 
 **Install prerequisite perl modules**
 
-There are meny methods of installing perl modules. We used `cpanm` for installing perl modules.
+There are meny methods of installing perl modules - we used `cpanm`.
 
-Install `cpanm` (_require internet connection_). Using command:
+Install `cpanm` _*require internet connection_. Using command:
 ```sh
 sudo curl -L http://cpanmin.us | perl - --sudo App::cpanminus
 ```
 
-Before installing perl modules, make sure that MySQL server or client is installed on the system. In our environment, MySQL server with `cmdb` database was installed
-on the same Centos 7 VM as other dashboarding solution components: Grafana, InfluxDB and grafana_collect.pl
+Before installing perl modules, make sure that MySQL server or client is installed on the system. 
+In our environment, MySQL server with `cmdb` database was installed on the same Centos 7 VM as other dashboarding solution components: Grafana, InfluxDB and grafana_collect.pl.
 Install the following perl modules using `cpanm` (_require internet connection_)::
 
 - Mojolicious::Lite 
@@ -40,7 +40,9 @@ Install the following perl modules using `cpanm` (_require internet connection_)
 - HTML::Table 
 - DBD::MySQL
 
-	cpanm Mojolicious::Lite Data::Dumper JSON Text::ASCIITable InfluxDB::LineProtocol Hijk HTML::Table DBD::MySQL
+```
+cpanm Mojolicious::Lite Data::Dumper JSON Text::ASCIITable InfluxDB::LineProtocol Hijk HTML::Table DBD::MySQL
+```
 
 Copy [`grafana_collect.pl`](scripts/grafana_collect.pl) to the server (_I used /case directory_) and make it executable.
 List routes defined by the script to check if it starts correctly:
@@ -110,6 +112,7 @@ If the script is configured correctly (proper credentials, proper API keys, CMDB
 Stop the script using `CTRL-c`.
 
 **Configure perl script to start with the system**
+
 Centos 7 uses `systemd` to initialize operating system components that must be started after Linux kernel is booted. Configure `systemd` to start grafana_collect.pl as a daemon together with the Operating System.
 1\. Copy service definition [grafana_collect.service](scripts/grafana_collect.service) to /etc/systemd/system directory. Note that provided service definition assumes that perl script is located in `/case` directory. Edit `grafana_collect.service` if you want to change script location or listening port (it uses port 3001 by default).
 
