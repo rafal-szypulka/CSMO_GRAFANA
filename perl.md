@@ -1,26 +1,35 @@
 #Prepare perl runtime
-Perl script described below collects data from the following data sources:
+Perl script [`grafana_collect.pl`](scripts/grafana_collect.pl) is an important part of dashboarding solution for BlueCompute.
+It collects data from the following data sources:
 
 - Bluemix Clound Foundry API
 - Bluemix Container API
 - New Relic API
+- NOI (Omnibus ObjectServer) API
 - pseudo-CMDB
- 
+- BAM (planned)
+
+and store in the InfluxDB which is a primary data source for Grafana dashboard.
+Script is based on [Mojolicious](http://mojolicious.org) perl web framework and can be deployed on any operating system supported by perl and prerequisite perl modules and in Bluemix as a Cloud Foundry application. This document specify steps needed to deploy it and run on Centos 7 VM.    
+
 Use the following steps to install prerequisite system packages and perl modules required for data collection script.
 
 **Install Centos packages**
 
 	sudo yum install perl-devel perl-CPAN gcc
 
-**Install perl modules**
+**Install prerequisite perl modules**
 
-There are meny methods of installing perl modules. We used `cpanm`.
+There are meny methods of installing perl modules. We used `cpanm` for installing perl modules.
 
-Install `cpanminus` (_require internet connection_). Using command:
+Install `cpanm` (_require internet connection_). Using command:
 ```sh
 sudo curl -L http://cpanmin.us | perl - --sudo App::cpanminus
 ```
-Install the following perl modules:
+
+Before installing perl modules, make sure that MySQL server or client is installed on the system. In our environment, MySQL server with `cmdb` database was installed
+on the same Centos 7 VM as other dashboarding solution components: Grafana, InfluxDB and grafana_collect.pl
+Install the following perl modules using `cpanm` (_require internet connection_)::
 
 - Mojolicious::Lite 
 - Data::Dumper 
@@ -31,12 +40,10 @@ Install the following perl modules:
 - HTML::Table 
 - DBD::MySQL
 
-using `cpanm` (_require internet connection_):
-
 	cpanm Mojolicious::Lite Data::Dumper JSON Text::ASCIITable InfluxDB::LineProtocol Hijk HTML::Table DBD::MySQL
 
-
-Execute data collection script to check if it starts correctly:
+Copy [`grafana_collect.pl`](scripts/grafana_collect.pl) to the server (_I used /case directory_) and make it executable.
+List routes defined by the script to check if it starts correctly:
 
 	./grafana.pl routes
 
@@ -78,6 +85,7 @@ my $uid = "cmdb";                                          # MySQL user for CMDB
 my $pwd = 'cmdb';                                          # MySQL user password
 ##########################################################################################
 ```
+
 Start the script. It will automatically start buil-in web server.
 
 	./grafana_collect.pl daemon -l http://*:3002
@@ -88,18 +96,70 @@ In the separate shell session on the same server execute:
 
 If the script is configured correctly (proper credentials, proper API keys, CMDB properly set up, etc.), you should see the similar output:
 
-	[root@rscase case]# curl localhost:3001/list
+	[root@rscase case]# curl localhost:3002/list
 	.------------------------------------------------------------------------------------------------------------------------------------------.
 	|                                                         New Relic Service Status                                                         |
 	+-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------+
 	| Name                              | Id       | Region Name  | Service Name   | Client   | Language | Status | Response time | Error rate |
 	+-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------+
-	| Python Application                | 23192303 | bmx_us-south | HybridOrderApp | foo      | python   | gray   | -             | -          |
-	| monverify                         | 23344331 |              |                |          | python   | green  |          20.4 | -          |
-	| CloudCatalogAPI                   | 30984725 | bmx_us-south | HybridOrderApp | foo      | nodejs   | green  |          23.6 | -          |
-	| HybridShopUI                      | 30999680 | bmx_us-south | HybridOrderApp | foo      | php      | green  |          51.8 | -          |
 	| inventory-bff-app-dev             | 31935607 | bmx_eu-gb    | BlueCompute    | CASE-DEV | nodejs   | green  | -             | -          |
 	| bluecompute-web-app               | 31939678 | bmx_eu-gb    | BlueCompute    | CASE-DEV | nodejs   | green  |          15.8 | -          |
 	| socialreview-bff-app              | 32528997 | bmx_eu-gb    | BlueCompute    | CASE-DEV | nodejs   | green  |            64 | -          |
 	'-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------'
+
+Stop the script using `CTRL-c`.
+
+**Configure perl script to start with the system**
+Centos 7 uses `systemd` to initialize operating system components that must be started after Linux kernel is booted. Configure `systemd` to start grafana_collect.pl as a daemon together with the Operating System.
+1\. Copy service definition [grafana_collect.service](scripts/grafana_collect.service) to /etc/systemd/system directory. Note that provided service definition assumes that perl script is located in `/case` directory. Edit `grafana_collect.service` if you want to change script location or listening port (it uses port 3001 by default).
+
+2\. Enable new service to start with the system.
+
+	systemctl enable grafana_collect
+
+3\. Start the `grafana_collect` service.
+
+	systemctl start grafana_collect
+
+4\. Verify that script started correctly.
+
+	systemctl status grafana_collect
+
+Expected output:
+
+```
+	[root@rscase ~]# systemctl status grafana_nr
+	● grafana_nr.service - CASE project app for Grafana
+	   Loaded: loaded (/etc/systemd/system/grafana_nr.service; enabled; vendor preset: disabled)
+	   Active: active (running) since Fri 2016-10-21 07:50:37 CDT; 21h ago
+	 Main PID: 1115 (grafana_nr.sh)
+	   CGroup: /system.slice/grafana_nr.service
+	           ├─ 1115 /bin/sh /case/grafana_nr.sh
+	           ├─ 1207 perl /case/1grafana_nr.pl prefork -m production -l http://*:3001
+	           ├─ 1210 perl /case/1grafana_nr.pl prefork -m production -l http://*:3001
+	           ├─15076 perl /case/1grafana_nr.pl prefork -m production -l http://*:3001
+	           ├─15277 perl /case/1grafana_nr.pl prefork -m production -l http://*:3001
+	           └─15347 perl /case/1grafana_nr.pl prefork -m production -l http://*:3001
+```
+
+	curl http://localhost:3001/list
+
+Expected output:
+
+	[root@rscase case]# curl localhost:3002/list
+	.------------------------------------------------------------------------------------------------------------------------------------------.
+	|                                                         New Relic Service Status                                                         |
+	+-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------+
+	| Name                              | Id       | Region Name  | Service Name   | Client   | Language | Status | Response time | Error rate |
+	+-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------+
+	| inventory-bff-app-dev             | 31935607 | bmx_eu-gb    | BlueCompute    | CASE-DEV | nodejs   | green  | -             | -          |
+	| bluecompute-web-app               | 31939678 | bmx_eu-gb    | BlueCompute    | CASE-DEV | nodejs   | green  |          15.8 | -          |
+	| socialreview-bff-app              | 32528997 | bmx_eu-gb    | BlueCompute    | CASE-DEV | nodejs   | green  |            64 | -          |
+	'-----------------------------------+----------+--------------+----------------+----------+----------+--------+---------------+------------'
+
+**Schedule periodic API calls**
+API calls done by [`grafana_collect.pl`](scripts/grafana_collect.pl) are activated by external HTTP GET requests to perl runtime web server listening on port `3001` by default. One of the ways to schedule periodic API calls is to create short shell script that will do the HTTP GET requests and schedule it by cron.
+Below are the configuration steps:
+1\. Copy the [grafana_collect_run.sh](scripts/grafana_collect_run.sh) to the server (_I copied it to my home drectory_) and make it executable.
+2\. Configure cron to run it every 1 minute using `crontab -e` as non-root user.
 
