@@ -53,9 +53,6 @@ The output should be similar to the following:
 
 
 	[root@rscase case]# ./grafana_collect.pl routes
-	/query             *    query
-	/search            *    search
-	/json              GET  json
 	/nr_cmdb           GET  nr_cmdb
 	/nr_mysql_cmdb     GET  nr_mysql_cmdb
 	/nr_nginx_cmdb     GET  nr_nginx_cmdb
@@ -65,6 +62,8 @@ The output should be similar to the following:
 	/noi_app_severity  GET  noi_app_severity
 	/list              GET  list
 	/html              GET  html
+	/query             *    query
+	/search            *    search
 
 Edit the script [`grafana_collect.pl`](scripts/grafana_collect.pl) and change the following variables according to comments inside the script:
 
@@ -171,6 +170,7 @@ Below are the configuration steps:
 
 First batch of data should be available in InfluxDB after about 1 minute.
 Enter InfluxDB shell or web console http://localhost:8083 and verify that data was written to database:
+
 ```
 [root@rscase rafal]# influx
 Visit https://enterprise.influxdata.com to register for updates, InfluxDB server management, and monitoring.
